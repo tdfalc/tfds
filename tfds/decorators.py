@@ -1,4 +1,3 @@
-from typing import List
 from pathlib import Path
 import os
 import hashlib
@@ -11,7 +10,6 @@ def cache(
     save_dir: Path,
     use_cache=True,
     extra_mem_cache=True,
-    kwargs_to_add: List[str] = None,
 ):
     mem_cache = {}
 
@@ -24,13 +22,8 @@ def cache(
             pickle_str = cloudpickle.dumps((args, kwargs))
             input_hash = hashlib.sha256(pickle_str).hexdigest()[:8]
 
-            # Create a string for extra keyword arguments
-            kwarg_string = ""
-            if kwargs_to_add is not None:
-                kwarg_string = "".join([f"_{k}={kwargs[k]}" for k in kwargs_to_add])
-
             # Construct the cache path
-            cache_path = save_dir / f"{func_name}{kwarg_string}_{input_hash}.pkl"
+            cache_path = save_dir / f"{func_name}_{input_hash}.pkl"
 
             if use_cache:
                 if extra_mem_cache and cache_path in mem_cache:

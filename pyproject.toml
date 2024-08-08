@@ -1,12 +1,15 @@
 [tool.poetry]
-name = "y"
-version = "y"
+name = "tfds"
+version = "0.1"
 description = ""
 authors = ["tdfalc <tomdfalc@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+pytest = "^8.3.2"
+matplotlib = "^3.9.1.post1"
+cloudpickle = "^3.0.0"
 
 
 [build-system]

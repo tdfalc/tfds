@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tfds"
-version = "0.1"
+version = "0.2"
 description = ""
 authors = ["tdfalc <tomdfalc@gmail.com>"]
 readme = "README.md"

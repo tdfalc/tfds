@@ -1,24 +1,34 @@
-import os
-
 import cloudpickle
+import hashlib
 
 from tfds.decorators import cache
 
 
-def cached_function(tmp_path, use_cache):
-    @cache(tmp_path, use_cache=use_cache)
-    def f(x):
-        return x
+def sample_function(tmp_path):
+    @cache(save_dir=tmp_path, use_cache=True)
+    def func(a, b):
+        return a + b
 
-    return f
+    return func
 
 
-def test_cache(tmp_path):
+def test_cache_decorator_new_computation(tmp_path):
 
-    input = "input"
-    cached_function(tmp_path, use_cache=True)(input)
+    # Run the function and cache result
+    result = sample_function(tmp_path)(2, 3)
 
-    fname = os.listdir(tmp_path).pop()
-    with open(tmp_path / fname, "rb") as f:
-        output = cloudpickle.load(f)
-        assert output == input
+    # Assert the result
+    assert result == 5
+
+    # Verify that cache file is created
+    pickle_str = cloudpickle.dumps(((2, 3), {}))
+    input_hash = hashlib.sha256(pickle_str).hexdigest()[:8]
+    cache_path = tmp_path / f"func_{input_hash}.pkl"
+
+    assert cache_path.exists()
+
+    # Check cache content
+    with open(cache_path, "rb") as f:
+        cached_result = cloudpickle.load(f)
+
+    assert cached_result == result

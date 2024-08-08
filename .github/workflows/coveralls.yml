@@ -1,0 +1,41 @@
+name: Coveralls Test
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+       
+      - name: Install poetry
+        run: pipx install poetry==1.7.1
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install python dependencies
+        run: poetry install
+      
+      - name: Test
+        run: |
+          poetry run pytest -v --cov=tfds --cov-report term-missing
+          coveralls --service=github
+        #env:
+          #github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  finish:
+    name: Finish Coveralls
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Finish Coveralls
+      uses: coverallsapp/github-action@v1
+      with:
+        github-token: ${{ secrets.github_token }}
+        parallel-finished: true

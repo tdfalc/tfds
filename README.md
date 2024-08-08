@@ -4,4 +4,4 @@
 [![Coverage Status](https://coveralls.io/repos/github/tdfalc/tfds/badge.svg?branch=main&service=github)](https://coveralls.io/github/tdfalc/tfds?branch=main)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Useful data science-y stuff
+Useful data science-y stuff :dizzy:

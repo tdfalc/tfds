@@ -1,34 +1,97 @@
-import cloudpickle
-import hashlib
+import pytest
+import time
 
-from tfds.decorators import cache
-
-
-def sample_function(tmp_path):
-    @cache(save_dir=tmp_path, use_cache=True)
-    def func(a, b):
-        return a + b
-
-    return func
+from tfds.decorators import cache, blind_file_cache
 
 
-def test_cache_decorator_new_computation(tmp_path):
+@pytest.fixture
+def temp_cache_dir(tmp_path):
+    return tmp_path / "test_cache"
 
-    # Run the function and cache result
-    result = sample_function(tmp_path)(2, 3)
 
-    # Assert the result
-    assert result == 5
+@pytest.fixture
+def temp_cache_file(tmp_path):
+    return tmp_path / "test_cache.pkl"
 
-    # Verify that cache file is created
-    pickle_str = cloudpickle.dumps(((2, 3), {}))
-    input_hash = hashlib.sha256(pickle_str).hexdigest()[:8]
-    cache_path = tmp_path / f"func_{input_hash}.pkl"
 
-    assert cache_path.exists()
+def test_cache(temp_cache_dir):
+    call_count = 0
 
-    # Check cache content
-    with open(cache_path, "rb") as f:
-        cached_result = cloudpickle.load(f)
+    @cache(save_location=temp_cache_dir)
+    def test_func(x, y):
+        nonlocal call_count
+        call_count += 1
+        return x + y
 
-    assert cached_result == result
+    # First call
+    assert test_func(1, 2) == 3
+    assert call_count == 1
+
+    # Cached call
+    assert test_func(1, 2) == 3
+    assert call_count == 1  # Should use cache
+
+    # Different arguments
+    assert test_func(3, 4) == 7
+    assert call_count == 2  # New args, should call function
+
+    # Verify disk cache
+    assert len(list(temp_cache_dir.glob("*"))) == 2  # Two cache files should exist
+
+
+def test_cache_disabled(temp_cache_dir):
+    call_count = 0
+
+    @cache(save_location=temp_cache_dir, use_cache=False)
+    def test_func(x):
+        nonlocal call_count
+        call_count += 1
+        return x * 2
+
+    assert test_func(5) == 10
+    assert test_func(5) == 10
+    assert call_count == 2  # Should call function twice
+
+
+def test_blind_file_cache(temp_cache_file):
+
+    call_count = 0
+
+    @cache(save_location=temp_cache_file)
+    def test_func(x, y):
+        nonlocal call_count
+        call_count += 1
+        return x + y
+
+    # First call
+    assert test_func(1, 2) == 3
+    assert call_count == 1
+
+    # Cached call
+    assert test_func(1, 2) == 3
+    assert call_count == 1  # Should use cache
+
+    # Different arguments
+    assert test_func(3, 4) == 7
+    assert call_count == 2  # New args, should call function
+
+    # Verify disk cache
+    assert temp_cache_file.exists()
+
+
+def test_cache_bypass(temp_cache_file):
+
+    call_count = 0
+
+    @cache(save_location=temp_cache_file, use_cache=False)
+    def test_func(x):
+        nonlocal call_count
+        call_count += 1
+        return x * 2
+
+    assert test_func(5) == 10
+    assert test_func(5) == 10
+    assert call_count == 2  # Should call function twice
+
+    # No file should exist
+    assert not temp_cache_file.exists()
